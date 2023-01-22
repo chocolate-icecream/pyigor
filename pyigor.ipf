@@ -70,6 +70,10 @@ Function PyIgorLoadWave(port, uid, wvName, filePath, flag)
 	Variable flag
 	Variable fileID
 	
+	if (strlen(wvName) == 0)
+		wvName = UniqueName("wave", 1, 0)
+	endif
+	
 	HDF5OpenFile/R fileID as PyIgorConvertPathStr(filePath)
 	if (V_flag != 0)
 		Print "HDF5OpenFile failed"
