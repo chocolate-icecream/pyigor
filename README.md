@@ -1,6 +1,6 @@
 # PyIgor
 
-PyIgor briges between Python and WaveMetrics Igor Pro.
+PyIgor bridges between Python and WaveMetrics Igor Pro.
 
 ## Preparation
 

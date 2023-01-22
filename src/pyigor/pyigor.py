@@ -1,13 +1,14 @@
 import os
-import flask
-from flask import Flask
 import logging
 import threading
 import queue
 import uuid
 import subprocess
-import h5py
 import re, ast, json, glob
+
+import flask
+from flask import Flask
+import h5py
 
 class Connection:
     def __init__(self, port=15556):
@@ -23,23 +24,23 @@ class Connection:
         threading.Thread(target=self._run_server, daemon=True).start()
     
     def _find_executable_path(self):
-        config_path = os.path.join(os.path.dirname(__file__), "config", "config.json")
+        # config_path = os.path.join(os.path.dirname(__file__), "config", "config.json")
         exe_path = None
-        config = {}
-        try:
-            with open(config_path, "r") as f:
-                config = json.load(f)
-            if "executable_path" in config and len(config["executable_path"]) > 0:
-                exe_path = config["executable_path"]
-        except:
-            pass
-        if exe_path is None:
-            path_candidates = glob.glob("/Applications/Igor Pro*/Igor64.app/Contents/MacOS/Igor64")
-            assert len(path_candidates) > 0, "Cannot find Igor Pro"
-            exe_path = path_candidates[0]
-            config["executable_path"] = exe_path
-            with open(config_path, "w") as f:
-                json.dump(config, f)
+        # config = {}
+        # try:
+        #     with open(config_path, "r") as f:
+        #         config = json.load(f)
+        #     if "executable_path" in config and len(config["executable_path"]) > 0:
+        #         exe_path = config["executable_path"]
+        # except:
+        #     pass
+        # if exe_path is None:
+        path_candidates = glob.glob("/Applications/Igor Pro*/Igor64.app/Contents/MacOS/Igor64")
+        assert len(path_candidates) > 0, "Cannot find Igor Pro"
+        exe_path = path_candidates[0]
+            # config["executable_path"] = exe_path
+            # with open(config_path, "w") as f:
+            #     json.dump(config, f)
         return exe_path
     
     def get(self, wavename):
