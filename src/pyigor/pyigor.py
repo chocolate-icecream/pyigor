@@ -39,28 +39,18 @@ class Connection:
             pass
     
     def _find_executable_path(self):
-        # config_path = os.path.join(os.path.dirname(__file__), "config", "config.json")
         exe_path = None
-        # config = {}
-        # try:
-        #     with open(config_path, "r") as f:
-        #         config = json.load(f)
-        #     if "executable_path" in config and len(config["executable_path"]) > 0:
-        #         exe_path = config["executable_path"]
-        # except:
-        #     pass
-        # if exe_path is None:
-        path_candidates = glob.glob("/Applications/Igor Pro*/Igor64.app/Contents/MacOS/Igor64")
+        path_candidates = glob.glob("/Applications/Igor Pro*/Igor64.app/Contents/MacOS/Igor64") # OS dependent.
         assert len(path_candidates) > 0, "Cannot find Igor Pro"
         exe_path = path_candidates[0]
-            # config["executable_path"] = exe_path
-            # with open(config_path, "w") as f:
-            #     json.dump(config, f)
         return exe_path
     
-    def __call__(self, command):
-        command = command.replace("'", "\"")
-        self.execute_command(command)    
+    def __call__(self, commands):
+        if isinstance(commands, str):
+            commands = [commands]
+        for c in commands:
+            c = c.replace("'", "\"")
+            self.execute_command(c)    
     
     def get(self, wavename):
         uid = uuid.uuid1().hex
@@ -143,7 +133,7 @@ class Connection:
             result_dict = {"array": f[uid][...]}
         return ("ok", uid, result_dict)
     
-    def _temp_path(self, for_igor=False):
+    def _temp_path(self, for_igor=False): # Can be OS dependent.
         path = os.path.join(self._basepath, f"temp_pyigor_{self._port}.h5")
         if for_igor:
             path = path.replace(os.path.sep, ":")
