@@ -11,6 +11,7 @@ from flask import Flask
 import h5py
 
 class Connection:
+    TIMEOUT = 3
     def __init__(self, port=15556):
         self._app = Flask(__name__)
         self._task_queue = queue.Queue(maxsize=1)
@@ -22,6 +23,20 @@ class Connection:
         
         self._register_route()
         threading.Thread(target=self._run_server, daemon=True).start()
+
+    def reset(self):
+        try:
+            self._queue.put_nowait(("error", 0))
+        except:
+            pass
+        try:
+            self._queue.get_nowait()
+        except:
+            pass
+        try:
+            self._task_queue.get_nowait()
+        except:
+            pass
     
     def _find_executable_path(self):
         # config_path = os.path.join(os.path.dirname(__file__), "config", "config.json")
@@ -43,17 +58,21 @@ class Connection:
             #     json.dump(config, f)
         return exe_path
     
+    def __call__(self, command):
+        command = command.replace("'", "\"")
+        self.execute_command(command)    
+    
     def get(self, wavename):
         uid = uuid.uuid1().hex
         try:
-            self._task_queue.put(("get", uid), timeout=10)
+            self._task_queue.put(("get", uid), timeout=self.TIMEOUT)
         except queue.Full:
             return
         
         self.execute_command(f"PyIgorOutputWave({self._port}, \"{uid}\", \"{wavename}\", \"{self._temp_path(True)}\")")
         result = None
         try:
-            reply = self._queue.get(timeout=10)
+            reply = self._queue.get(timeout=self.TIMEOUT)
             if reply[0] == "ok":
                 assert reply[1] == uid, "Error: Request-response ID does not match."
                 result = Wave.from_dict(reply[2])
@@ -66,14 +85,14 @@ class Connection:
     def put(self, wave, wavename=""):
         uid = uuid.uuid1().hex
         try:
-            self._task_queue.put(("put", uid), timeout=10)
+            self._task_queue.put(("put", uid), timeout=self.TIMEOUT)
         except queue.Full:
             return
         with h5py.File(self._temp_path(), "w") as f:
             dset = f.create_dataset(uid, data=wave)
         self.execute_command(f"PyIgorLoadWave({self._port}, \"{uid}\", \"{wavename}\", \"{self._temp_path(True)}\", 0)")
         try:
-            result = self._queue.get(timeout=10)
+            result = self._queue.get(timeout=self.TIMEOUT)
         except queue.Empty:
             result = None
         assert self._task_queue.get_nowait() == ("put", uid)

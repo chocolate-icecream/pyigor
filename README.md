@@ -21,8 +21,10 @@ array = np.sin(np.linspace(0, 10, 100))
 igor = Connection()
 igor.put(array, "sinwave")
 
+igor("sinwave += 1")
+
 wv = igor.get("sinwave")
-print(wv)
+print(wv.array)
 ```
 
 #### Accessing Python from Igor Pro
