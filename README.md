@@ -6,7 +6,7 @@ PyIgor bridges between Python and WaveMetrics Igor Pro.
 
 - Igor Pro 7.0 or later
 - HDF5 XOP installation (See HDF5 installation in Igor Pro's help topics for the detail).
-- Load pyigor.ipf (https://github.com/chocolate-icecream/pyigor/blob/master/pyigor.ipf, Put it into User Procedure folder for convenience).
+- Load pyigor.ipf (https://github.com/chocolate-icecream/pyigor/blob/master/pyigor.ipf, You can put it into Igor Procedures folder for convenience).
 
 ## Usage
 
