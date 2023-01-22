@@ -41,7 +41,7 @@ def myfunc(a):
 igor.wait_done()
 ```
 
-###### Calling registered functions from Igor
+###### Calling registered functions from Igor Pro
 
 ```
 print PyIgorCall("myfunc(10)")
