@@ -10,16 +10,31 @@ import flask
 from flask import Flask
 import h5py
 
+##### OS dependent codes #####
+def find_executable_path():
+    exe_path = None
+    path_candidates = glob.glob("/Applications/Igor Pro*/Igor64.app/Contents/MacOS/Igor64")
+    assert len(path_candidates) > 0, "Cannot find Igor Pro"
+    exe_path = path_candidates[0]
+    return exe_path
+
+def convert_to_igor_path(path):
+    return path.replace(os.path.sep, ":")
+##### OS dependent codes #####
+
+
 class Connection:
-    TIMEOUT = 3
-    def __init__(self, port=15556):
+    TIMEOUT = 5
+    ### security_hole options makes it possible to execute any Python code by HTTP requests. Do not use unless you are sure of it.
+    def __init__(self, port=15556, security_hole=False):
         self._app = Flask(__name__)
         self._task_queue = queue.Queue(maxsize=1)
         self._queue = queue.Queue(maxsize=1)
         self._port = port
         self._registered_functions = {"get": self.get, "put": self.put, "print": print}
         self._basepath = os.getcwd()
-        self._executable_path = self._find_executable_path()
+        self._executable_path = self.find_executable_path()
+        self._security_hole = security_hole
         
         self._register_route()
         threading.Thread(target=self._run_server, daemon=True).start()
@@ -37,14 +52,7 @@ class Connection:
             self._task_queue.get_nowait()
         except:
             pass
-    
-    def _find_executable_path(self):
-        exe_path = None
-        path_candidates = glob.glob("/Applications/Igor Pro*/Igor64.app/Contents/MacOS/Igor64") # OS dependent.
-        assert len(path_candidates) > 0, "Cannot find Igor Pro"
-        exe_path = path_candidates[0]
-        return exe_path
-    
+
     def __call__(self, commands):
         if isinstance(commands, str):
             commands = [commands]
@@ -116,13 +124,16 @@ class Connection:
             p = re.compile(r"([\w]+)\(([^\)]*)\)")
             for command in commands.split(";"):
                 try:
-                    m = re.match(p, command)
-                    if m is None:
-                        continue
-                    fname, args = m.groups()
-                    args = ast.literal_eval(f"[{args}]")
-                    if fname in self._registered_functions:
-                        result_list.append(self._registered_functions[fname](*args))
+                    if self._security_hole:
+                        result_list.append(eval(command)) # eval is used to execute any Python code.
+                    else:
+                        m = re.match(p, command)
+                        if m is None:
+                            continue
+                        fname, args = m.groups()
+                        args = ast.literal_eval(f"[{args}]")
+                        if fname in self._registered_functions:
+                            result_list.append(self._registered_functions[fname](*args))
                 except Exception as e:
                     print(e)
                     result_list.append(f"error:{command}")
@@ -133,10 +144,10 @@ class Connection:
             result_dict = {"array": f[uid][...]}
         return ("ok", uid, result_dict)
     
-    def _temp_path(self, for_igor=False): # Can be OS dependent.
+    def _temp_path(self, for_igor=False):
         path = os.path.join(self._basepath, f"temp_pyigor_{self._port}.h5")
         if for_igor:
-            path = path.replace(os.path.sep, ":")
+            path = convert_to_igor_path(path)
         return path
 
     
@@ -161,6 +172,9 @@ class Connection:
 class Wave:
     def __init__(self, array):
         self.array = array
+        self.offsets = 0
+        self.deltas = 1
+        self.units = None
     
     @classmethod
     def from_dict(cls, d):
