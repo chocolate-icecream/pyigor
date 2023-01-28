@@ -24,17 +24,18 @@ def convert_to_igor_path(path):
 
 
 class Connection:
-    TIMEOUT = 5
+    TIMEOUT = 3
     ### security_hole options makes it possible to execute any Python code by HTTP requests. Do not use unless you are sure of it.
-    def __init__(self, port=15556, security_hole=False):
+    def __init__(self, port=15556, security_hole=False, timeout=3):
         self._app = Flask(__name__)
         self._task_queue = queue.Queue(maxsize=1)
         self._queue = queue.Queue(maxsize=1)
         self._port = port
         self._registered_functions = {"get": self.get, "put": self.put, "print": print}
         self._basepath = os.getcwd()
-        self._executable_path = self.find_executable_path()
+        self._executable_path = find_executable_path()
         self._security_hole = security_hole
+        self.TIMEOUT = timeout
         
         self._register_route()
         threading.Thread(target=self._run_server, daemon=True).start()
@@ -80,7 +81,7 @@ class Connection:
         assert self._task_queue.get_nowait() == ("get", uid)
         return result
 
-    def put(self, wave, wavename=""):
+    def put(self, wave, wavename="", x0=0, dx=1):
         uid = uuid.uuid1().hex
         try:
             self._task_queue.put(("put", uid), timeout=self.TIMEOUT)
