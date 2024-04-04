@@ -4,19 +4,36 @@ import threading
 import queue
 import uuid
 import subprocess
-import re, ast, json, glob
+import re, ast, json, glob, platform
 
 import flask
 from flask import Flask
 import h5py
 
+my_platform = "mac" if platform.platform(terse=True).startswith("macOS") else ("windows" if platform.platform(terse=True).startswith("Windows") else None)
+
+def alphanumeric_sort(l):
+    convert = lambda text: int(text) if text.isdigit() else text.lower()
+    alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)]
+    return sorted(l, key=alphanum_key, reverse=True)
+
 ##### OS dependent codes #####
 def find_executable_path():
-    exe_path = None
-    path_candidates = glob.glob("/Applications/Igor Pro*/Igor64.app/Contents/MacOS/Igor64")
+    exe_path_dict = {   "mac": "/Applications/Igor Pro * Folder/Igor64.app/Contents/MacOS/Igor64",
+                        "windows": "C:\Program Files\WaveMetrics\Igor Pro * Folder\IgorBinaries_x64\Igor64.exe"}
+
+    path_candidates = glob.glob(exe_path_dict[my_platform])
     assert len(path_candidates) > 0, "Cannot find Igor Pro"
-    exe_path = path_candidates[0]
+
+    exe_path = alphanumeric_sort(path_candidates)[0] # get the newest version
     return exe_path
+
+def execute_command_on_my_platform(command, executable_path):
+    if my_platform == "mac":
+        subprocess.run([executable_path, "-Q", "-X", command])
+    if my_platform == "windows":
+        temp = subprocess.list2cmdline([executable_path, "-Q", "-X"])
+        subprocess.run(f"{temp} {command}")
 
 def convert_to_igor_path(path):
     return path.replace(os.path.sep, ":")
@@ -153,7 +170,7 @@ class Connection:
 
     
     def execute_command(self, command):
-        subprocess.run([self._executable_path, "-Q", "-X", command])
+        execute_command_on_my_platform(command, self._executable_path)
 
     def wait_done(self):
         try:
@@ -173,9 +190,9 @@ class Connection:
 class Wave:
     def __init__(self, array):
         self.array = array
-        self.offsets = 0
-        self.deltas = 1
-        self.units = None
+        self.offset = [0]
+        self.delta = [1]
+        self.units = [None]
     
     @classmethod
     def from_dict(cls, d):
@@ -184,8 +201,4 @@ class Wave:
     
     def __str__(self):
         return f"<Wave shape:{self.array.shape}, data_type:{self.array.dtype}>"
-
-if __name__ == "__main__":
-    igor = Connection()
-    igor.wait_done()
 

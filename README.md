@@ -56,3 +56,11 @@ By using Connection(security_hole=True), you can call any Python code. Meanwhile
 ```
 print PyIgorCall("myfunc(10)")
 ```
+
+
+
+## Contributors
+
+A special thanks to the people who have contributed to this project:
+\- [@nlyamada](https://github.com/nlyamada) - Made compatible with Windows
+
