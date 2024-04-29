@@ -1,66 +1,75 @@
 # PyIgor
 
-PyIgor bridges between Python and WaveMetrics Igor Pro.
+PyIgor facilitates communication between Python and WaveMetrics Igor Pro, enabling seamless data and command exchange.
 
-## Preparation
+## Requirements
 
-- Igor Pro 7.0 or later
-- HDF5 XOP installation (See HDF5 installation in Igor Pro's help topics for the detail).
-- Load pyigor.ipf (https://github.com/chocolate-icecream/pyigor/blob/master/pyigor.ipf).
+- **Igor Pro 7.0 or later:** Ensure you have Igor Pro 7.0 or a newer version installed.
+- **HDF5 XOP:** Install the HDF5 XOP module. Detailed installation instructions are available in the "HDF5 installation" section under Igor Pro's help topics.
+- **PyIgor Procedure File:** Download the `pyigor.ipf` file from [GitHub](https://github.com/chocolate-icecream/pyigor/blob/master/pyigor.ipf) and place it in the Igor Procedures folder for convenience.
 
-  Putting it in the Igor Procedures folder is very convenient.
+## Installation
+
+To install PyIgor, use the following pip command:
+
+```bash
+pip install pyigor
+```
 
 ## Usage
 
-#### Accessing Igor Pro from Python
+### Accessing Igor Pro from Python
+
+Here’s how you can interact with Igor Pro using PyIgor:
 
 ```python
 from pyigor import Connection
 import numpy as np
 
+# Establish a connection with Igor Pro
 igor = Connection()
 
-### Sending an array to Igor Pro
+# Send a numpy array to Igor Pro
 array = np.sin(np.linspace(0, 10, 100))
 igor.put(array, "sinwave")
 
-### Executing a command in Igor Pro
+# Execute a command in Igor Pro
 igor("sinwave += 1")
 
-### Getting a wave from Igor Pro
+# Retrieve a wave from Igor Pro
 wv = igor.get("sinwave")
 print(wv.array)
 ```
 
-#### Accessing Python from Igor Pro
+### Accessing Python from Igor Pro
 
-###### Preparation in Python
+#### Preparing Python
 
 ```python
 from pyigor import Connection
 
+# Establish a connection
 igor = Connection()
 
-### @igor.function decorator makes the function callable from Igor Pro.
+# Register a function callable from Igor Pro
 @igor.function 
 def myfunc(a):
-	return a*a
+    return a * a
 
-igor.wait_done() # Just to prevent the program quit. You don't need it in the interactive mode.
+# Keep the connection open; not required in interactive mode
+igor.wait_done()
 ```
 
-By using Connection(security_hole=True), you can call any Python code. Meanwhile, this option makes it possible to execute any Python code by HTTP requests: http://localhost/code -> `eval(code)`. Do not use unless you are sure of it.
+Use the `Connection(security_hole=True)` to call any Python code from Igor Pro. This setting allows executing Python code through HTTP requests to `http://localhost/code` using `eval(code)`. **Important:** Use this option only if you understand the security implications.
 
-###### Calling registered functions from Igor Pro
+#### Calling Python Functions from Igor Pro
+
+Execute Python functions registered via PyIgor from Igor Pro:
 
 ```
 print PyIgorCall("myfunc(10)")
 ```
 
+## Security Note
 
-
-## Contributors
-
-A special thanks to the people who have contributed to this project:
-\- [@nlyamada](https://github.com/nlyamada) - Made compatible with Windows
-
+When enabling `security_hole=True`, ensure your environment is secure and understand the risks associated with executing arbitrary code.
