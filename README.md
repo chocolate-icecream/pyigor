@@ -18,6 +18,8 @@ pip install pyigor
 
 ## Usage
 
+Note: Ensure Igor Pro is running before executing these commands. If Igor Pro is not already running, the commands will start Igor Pro and pause until the process completes.
+
 ### Accessing Igor Pro from Python
 
 Here’s how you can interact with Igor Pro using PyIgor:
@@ -60,16 +62,24 @@ def myfunc(a):
 igor.wait_done()
 ```
 
-Use the `Connection(security_hole=True)` to call any Python code from Igor Pro. This setting allows executing Python code through HTTP requests to `http://localhost/code` using `eval(code)`. **Important:** Use this option only if you understand the security implications.
+Use the `Connection(security_hole=True)` option to call any Python code from Igor Pro. This setting allows executing Python code through HTTP requests to `http://localhost/code` using `eval(code)`. **Important:** Use this option only if you understand the security implications.
 
 #### Calling Python Functions from Igor Pro
 
 Execute Python functions registered via PyIgor from Igor Pro:
 
-```
+```igorpro
 print PyIgorCall("myfunc(10)")
 ```
 
 ## Security Note
 
 When enabling `security_hole=True`, ensure your environment is secure and understand the risks associated with executing arbitrary code.
+
+
+
+## Contributors
+
+ A special thanks to the people who have contributed to this project:
+
+- [@nlyamada](https://github.com/nlyamada) - Made compatible with Windows

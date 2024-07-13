@@ -22,7 +22,7 @@ def alphanumeric_sort(l):
 ##### OS dependent codes #####
 def find_executable_path():
     exe_path_dict = {"mac": os.path.join("/Applications", "Igor Pro * Folder", "Igor64.app", "Contents", "MacOS", "Igor64"),
-                    "windows": os.path.join("C:", "Program Files", "WaveMetrics", "Igor Pro * Folder", "IgorBinaries_x64", "Igor64.exe")}
+                    "windows": os.path.join(os.environ.get("ProgramFiles"), "WaveMetrics", "Igor Pro * Folder", "IgorBinaries_x64", "Igor64.exe")}
 
     path_candidates = glob.glob(exe_path_dict[my_platform])
     assert len(path_candidates) > 0, "Cannot find Igor Pro"
@@ -193,7 +193,7 @@ class Connection:
     def function(self, f):
         def wrapper(*args, **kwargs):
             return f(*args, **kwargs)
-        self._registered_functions[f.__name__] == f
+        self._registered_functions[f.__name__] = f
         return wrapper
 
 class Wave:
@@ -225,6 +225,10 @@ class Wave:
     @property
     def leftx(self):
         return self.offsets[0]
+
+    @property
+    def x(self):
+        return np.linspace(self.leftx, self.leftx+self.deltax*self.shape[0], self.shape[0], endpoint=False)
 
     def __repr__(self):
         return f"<pyigor.Wave shape: {self.shape}, data_type: {self.array.dtype}>"
