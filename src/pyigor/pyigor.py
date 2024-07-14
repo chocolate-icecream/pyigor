@@ -22,7 +22,7 @@ def alphanumeric_sort(l):
 ##### OS dependent codes #####
 def find_executable_path():
     exe_path_dict = {"mac": os.path.join("/Applications", "Igor Pro * Folder", "Igor64.app", "Contents", "MacOS", "Igor64"),
-                    "windows": os.path.join(os.environ.get("ProgramFiles"), "WaveMetrics", "Igor Pro * Folder", "IgorBinaries_x64", "Igor64.exe")}
+                    "windows": os.path.join(os.environ.get("ProgramFiles", "DUMMY_PATH"), "WaveMetrics", "Igor Pro * Folder", "IgorBinaries_x64", "Igor64.exe")}
 
     path_candidates = glob.glob(exe_path_dict[my_platform])
     assert len(path_candidates) > 0, "Cannot find Igor Pro"
